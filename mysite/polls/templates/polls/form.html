@@ -1,0 +1,276 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Dependecias funcionales</title>
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'polls/view.css' %}" media="all">
+<link rel="stylesheet" type="text/css" href="{% static 'polls/styleDep.css' %}" media="all">
+<script type="text/javascript" src="{% static 'polls/view.js' %}"></script>
+<script type="text/javascript" src="{% static 'polls/jquery-3.2.1.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+
+	var dFList = [];
+
+	dFListStr = "";
+	var atributos = "";
+	var L = "";
+
+
+	$("#agregar").click(function() {
+		var implicante = "";
+		var implicado = "";
+		var dFuncional = "";
+
+		implicante = $("#implicante").val();
+		implicado = $("#implicado").val();
+
+		dFuncional = "{\"x\": \"" + implicante + "\" , \"y\": \"" + implicado + "\"}";
+		dFList.push(dFuncional);
+
+		dFListStr = dFList.toString();
+
+		$("#implicante").val('');
+		$("#implicado").val('');
+		//alert(dFListStr);	  
+		//L = $("#listDependence").val().trim().replace('{','').replace('}','');
+		if (L != "") {
+			validate = true;
+		}
+		if (validate) {
+			L = L + ',';
+		}
+		L = L + "[" + implicante + ',' + implicado + "]";
+
+	});
+
+	$("#calcular").click(function() {
+
+		atributos = $("#atributos").val();
+		
+		if(!$.isEmptyObject(atributos)){
+			if(!$.isEmptyObject(dFListStr)){
+				contruirJson();				
+				$("#atributos").val();			
+				//alert(dFListStr);
+				document.getElementById("json_atributos").value = "{" + dFListStr + "}";
+				document.getElementById("form_27721").action = "/polls/manual/";
+				document.getElementById("submit").click();
+			}else{
+				alert("Debe Ingresar dependencias funcionales\n\nEjemplo  para CODIGO  -> CARRERA \nIngresar: Implicante = CODIGO , Implicado = CARRERA");
+			}	
+		}else{
+			alert('Debe ingresar el alfabeto en mayúsculas separado por "," \n Ejemplo: CODIGO,CARRERA,...,NOMBRE');
+			
+		}
+
+
+	});
+	
+	$("#limpiar").click(function() {
+		 location.reload();
+	});
+
+	function contruirJson() {
+
+		dFListStr = "\"dFuncionales\" : " + "[" + dFListStr + "]"
+		atributos = atributos.split("").toString();
+		//alert(dFListStr + " - " + atributos);
+
+	};
+
+
+	$(".add-row").click(function() {
+		var implicanteTotal = $("#implicante").val();		 		
+		var implicadoTotal = $("#implicado").val();		
+		
+		if(!$.isEmptyObject(implicanteTotal) || !$.isEmptyObject(implicadoTotal)){
+			var arrayImplicante = implicanteTotal.split(","); 
+			var arrayImplicado = implicadoTotal.split(","); 
+			var dependenciaValida = true;
+			
+			// Se valida repetidos en implicante 
+			$.each( arrayImplicante, function( i, implicante ) {
+				  $.each( arrayImplicante, function( j, implicado ) {
+						if(implicante === implicado && dependenciaValida  && i!= j){
+							alert('Dependencia trivial no valida,\nse repite el implicante '+ implicante +'  \n{ '+implicanteTotal+" -> "+implicadoTotal+" }");
+							dependenciaValida = false;
+							$("#implicante").val('');
+							$("#implicado").val('');
+						}
+					});	  
+			});
+			// Se valida repetidos en implicado 
+			$.each( arrayImplicado, function( i, implicante ) {
+				  $.each( arrayImplicado, function( j, implicado ) {
+						if(implicante === implicado && dependenciaValida  && i!= j){
+							alert('Dependencia trivial no valida,\nse repite el implicado '+ implicado +'  \n{ '+implicanteTotal+" -> "+implicadoTotal+" }");
+							dependenciaValida = false;
+							$("#implicante").val('');
+							$("#implicado").val('');
+						}
+					});	  
+			});
+			
+			// Se valida repetidos en implicado
+			$.each( arrayImplicante, function( i, implicante ) {
+				  $.each( arrayImplicado, function( i, implicado ) {
+						if(implicante === implicado && dependenciaValida ){
+							alert('Dependencia trivial no valida \n{ '+implicanteTotal+" -> "+implicadoTotal+" }");
+							dependenciaValida = false;
+							$("#implicante").val('');
+							$("#implicado").val('');
+						}
+					});	  
+			});
+		
+			if(dependenciaValida){
+				var markup = "<tr><td><div>" + implicanteTotal + "</div></td><td>" + implicadoTotal + "</td> <td style='text-align:center'><input type='checkbox' implicante='record'></td></tr>";
+				$("#tableDependencias tbody").append(markup);
+				$("#implicante").val('');
+				$("#implicado").val('');				
+				dFuncional = "{\"x\": \"" + implicanteTotal + "\" , \"y\": \"" + implicadoTotal + "\"}";
+				dFList.push(dFuncional);
+				dFListStr = dFList.toString();
+			}
+		}else{			
+			alert('Implicante e implicado deben tener valores asignados');
+		}
+	});
+
+	// Find and remove selected table rows
+	$(".delete-row").click(function() {
+		$("#tableDependencias tbody").find('input[implicante="record"]').each(function() {
+			if ($(this).is(":checked")) {
+				var domElement = $(this).parents("tr");
+				var valorDiv =$(this).find('div');				
+				Object.getOwnPropertyNames(valorDiv).forEach(
+				  function (val, idx, array) {
+					console.log(val + ' -> ' + valorDiv[val]);
+				  }
+				);
+				
+				
+				$(this).parents("tr").remove();
+			}
+		});
+	});
+
+	$('.alphaonly').bind('keyup blur', function() {
+		var node = $(this);
+		node.val(node.val().replace(/[^A-Z,]/g, ''));
+	});
+
+});
+</script>
+   
+</head>
+<body id="main_body" >
+	
+	<img id="top"  src="{% static 'polls/top.png' %}" alt="">
+	<div id="form_container">
+		<h1><a>Dependecias funcionales</a></h1>
+		<form id="form_27721" class="appnitro" enctype="multipart/form-data" method="post" action="/polls/json/">
+					<div class="form_description">
+			<h2>Dependecias funcionales</h2>			
+		</div>						
+			<ul >
+
+                <div class="tooltip">
+					<label class="description " for="element_1">Alfabeto </label>
+					<span class="tooltiptext">Utilizar Mayusculas</span>
+				</div></br>
+                    <input id="atributos" name="atributos" autocomplete="off" class="element text medium  alphaonly" placeholder="CODIGO,CARRERA,...,NOMBRE" type="text" maxlength="255" value=""/>
+        <li class="section_break">
+		<label class="description" for="element_2">Agregar Reglas </label>
+		<form>	
+        <table class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>
+                   <label for="implicante">Implicante</label>
+                </th>
+                <th>
+                    <label for="implicado">Implicado</label>
+                </th>				
+            </tr>
+        </thead>
+        <tbody>
+            <tr style="text-aling:center">
+                <td>
+					<div class="tooltip">
+						<input type="text" autocomplete="off" id="implicante" class="alphaonly" placeholder="Implicante">
+						<span class="tooltiptext">Utilizar Mayusculas</span>
+					</div>	
+				</td>
+                <td>
+					<div class="tooltip">
+						<input type="text" autocomplete="off" id="implicado" class="alphaonly" placeholder="Implicado">
+						<span class="tooltiptext">Utilizar Mayusculas</span>
+					</div>		
+				</td>
+            </tr>
+            </tbody>
+            </table>
+
+                <div style="margin-left:220px">
+                    <input type="button" class="add-row" value="Agregar">
+                    <input type="hidden" id="json_atributos" name="json_atributos" value="ALGO" />
+                </div>
+</form>    
+
+    <table id="tableDependencias" >
+        <thead>
+            <tr>                
+                <th>Implicante</th>
+                <th>Implicado</th>
+				<th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+
+            </tr>
+        </tbody>
+    </table>
+	<div style="text-align:center">
+		<input id="calcular" class="button_text" type="button" name="calcular" value="Calcular" />
+		<input id="limpiar" style="margin-left:100px" class="button_text" type="button" name="limpiar" value="Limpiar" />
+		<button type="button" style="margin-left:100px" class="delete-row">Eliminar</button>
+	</div>					
+        
+		</li>
+                <li class="section_break">
+			        <h3>O seleccione el archivo json</h3>
+		        </li>
+
+                <li id="li_4" >
+		                <label class="description" for="element_4">Cargar json </label>
+						<div>
+							<input id="element_4" name="element_4" class="element file" type="file"/> 
+						</div>
+					</li>
+					<li id="li_5" >
+						<div>
+							<input id="submit" class="button_text" type="submit" name="submit" value="Enviar" />
+						</div>
+					</li>
+					<li class="buttons">
+						<input type="hidden" name="form_id" value="27721" />
+					</li>
+				</ul>
+			</form>	
+			<div id="footer">
+				Creado por Yeison Tafur, Ricardo Peñaloza, Ruben Cañon
+				</br>
+				Universidad Distrital Francisco Jose de Caldas
+				</br>
+				Bases de Datos
+				</br>
+				@2018
+			</div>
+		</div>
+		<img id="bottom" src="{% static 'polls/bottom.png' %}" alt="">
+	</body>
+</html>

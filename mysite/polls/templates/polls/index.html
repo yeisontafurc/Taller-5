@@ -1,0 +1,19 @@
+{% if latest_question_list %}
+    <ul>
+    {% for question in latest_question_list %}
+        <li><a href="/polls/{{ question }}/">{{ question }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+{% endif %}
+<form action="/polls/06/" method="POST">
+	<input type="hidden" name="title" value="TITULIRIJILLO">
+	<input name="firstname" type="text">
+	<br>
+	<br>
+	<input type="submit">
+</form>
+<script>
+	//alert("You're in a js alert");
+</script>
